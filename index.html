@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Цифрова довіра</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            background: #000;
+            -webkit-font-smoothing: antialiased;
+        }
+
+    
+
+.start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #02040c;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 3rem;
+            z-index: 1000;
+            transition: opacity 0.8s ease;
+        }
+
+        .start-screen img {
+            max-width: 300px;
+            width: 80%;
+            height: auto;
+        }
+
+
+
+
+        .start-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Новая стильная кнопка с анимацией */
+        :root {
+            --shiny-cta-bg: #000000;
+            --shiny-cta-bg-subtle: #1a1818;
+            --shiny-cta-fg: #ffffff;
+            --shiny-cta-highlight: #667eea;
+            --shiny-cta-highlight-subtle: #8484ff;
+        }
+
+        @property --gradient-angle {
+            syntax: "<angle>";
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        @property --gradient-angle-offset {
+            syntax: "<angle>";
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        @property --gradient-percent {
+            syntax: "<percentage>";
+            initial-value: 5%;
+            inherits: false;
+        }
+
+        @property --gradient-shine {
+            syntax: "<color>";
+            initial-value: white;
+            inherits: false;
+        }
+
+        .shiny-cta {
+            --animation: gradient-angle linear infinite;
+            --duration: 3s;
+            isolation: isolate;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            outline-offset: 4px;
+            padding: 1.25rem 2.5rem;
+            font-family: inherit;
+            font-size: 1.125rem;
+            line-height: 1.2;
+            border: 1px solid transparent;
+            border-radius: 360px;
+            color: var(--shiny-cta-fg);
+            background: linear-gradient(var(--shiny-cta-bg), var(--shiny-cta-bg))
+                padding-box,
+                conic-gradient(
+                    from calc(var(--gradient-angle) - var(--gradient-angle-offset)),
+                    transparent,
+                    var(--shiny-cta-highlight) var(--gradient-percent),
+                    var(--gradient-shine) calc(var(--gradient-percent) * 2),
+                    var(--shiny-cta-highlight) calc(var(--gradient-percent) * 3),
+                    transparent calc(var(--gradient-percent) * 4)
+                )
+                border-box;
+            box-shadow: inset 0 0 0 1px var(--shiny-cta-bg-subtle);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .shiny-cta.fade-out {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .shiny-cta::before,
+        .shiny-cta::after,
+        .shiny-cta span::before {
+            content: "";
+            pointer-events: none;
+            position: absolute;
+            inset-inline-start: 50%;
+            inset-block-start: 50%;
+            translate: -50% -50%;
+            z-index: -1;
+        }
+
+        .shiny-cta:active {
+            translate: 0 1px;
+        }
+
+        /* Dots pattern */
+        .shiny-cta::before {
+            --size: calc(100% - var(--shadow-size) * 3);
+            --position: 2px;
+            --space: calc(var(--position) * 2);
+            width: var(--size);
+            height: var(--size);
+            background: radial-gradient(
+                circle at var(--position) var(--position),
+                white calc(var(--position) / 4),
+                transparent 0
+            )
+            padding-box;
+            background-size: var(--space) var(--space);
+            background-repeat: space;
+            mask-image: conic-gradient(
+                from calc(var(--gradient-angle) + 45deg),
+                black,
+                transparent 10% 90%,
+                black
+            );
+            border-radius: inherit;
+            opacity: 0.4;
+            z-index: -1;
+        }
+
+        /* Inner shimmer */
+        .shiny-cta::after {
+            --animation: shimmer linear infinite;
+            width: 100%;
+            aspect-ratio: 1;
+            background: linear-gradient(
+                -50deg,
+                transparent,
+                var(--shiny-cta-highlight),
+                transparent
+            );
+            mask-image: radial-gradient(circle at bottom, transparent 40%, black);
+            opacity: 0.6;
+        }
+
+        .shiny-cta span {
+            z-index: 1;
+            position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .shiny-cta span::before {
+            --size: calc(100% + 1rem);
+            width: var(--size);
+            height: var(--size);
+            box-shadow: inset 0 -1ex 2rem 4px var(--shiny-cta-highlight);
+            opacity: 0;
+            border-radius: inherit;
+        }
+
+        /* Animate */
+        .shiny-cta {
+            --transition: 800ms cubic-bezier(0.25, 1, 0.5, 1);
+            transition: var(--transition);
+            transition-property: --gradient-angle-offset, --gradient-percent, --gradient-shine, opacity, transform;
+        }
+
+        .shiny-cta,
+        .shiny-cta::before,
+        .shiny-cta::after {
+            animation: var(--animation) var(--duration),
+                var(--animation) calc(var(--duration) / 0.4) reverse paused;
+            animation-composition: add;
+        }
+
+        .shiny-cta span::before {
+            transition: opacity var(--transition);
+        }
+
+        .shiny-cta:is(:hover, :focus-visible) {
+            --gradient-percent: 20%;
+            --gradient-angle-offset: 95deg;
+            --gradient-shine: var(--shiny-cta-highlight-subtle);
+        }
+
+        .shiny-cta:is(:hover, :focus-visible),
+        .shiny-cta:is(:hover, :focus-visible)::before,
+        .shiny-cta:is(:hover, :focus-visible)::after {
+            animation-play-state: running;
+        }
+
+        /*.shiny-cta:is(:hover, :focus-visible) span::before {
+            opacity: 1;
+        }
+*/
+        @keyframes gradient-angle {
+            to {
+                --gradient-angle: 360deg;
+            }
+        }
+
+        @keyframes shimmer {
+            to {
+                rotate: 360deg;
+            }
+        }
+
+        /* Интро видео на весь экран */
+        .intro-video-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+
+        .intro-video-screen.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .intro-video-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .intro-video-screen video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Черная вспышка при переходе */
+        .transition-flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .transition-flash.active {
+            opacity: 1;
+        }
+
+        /* Основной контент */
+        .main-content {
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .main-content.visible {
+            opacity: 1;
+        }
+
+        /* Секция 1 - Полноэкранное видео */
+        .section-1 {
+            position: relative;
+            width: 100vw;
+            height: 99vh;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .section-1 video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-control-button {
+            position: absolute;
+            bottom: 40px;
+            width: 60px;
+            height: 60px;
+            background: rgba(00, 000, 000, 0.8);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            left: 50%;
+            transform: translateX(-50%);
+            border: solid 1px #fff;
+        }
+
+        .video-control-button.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .video-control-button:hover {
+            background: rgba(00, 000, 000, 1);
+            transform: translateX(-50%) scale(1.1);
+        }
+
+        .video-control-button .pause-icon,
+        .video-control-button .play-icon-btn {
+            position: relative;
+        }
+
+        .video-control-button .pause-icon {
+            width: 20px;
+            height: 24px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .video-control-button .pause-icon::before,
+        .video-control-button .pause-icon::after {
+            content: '';
+            width: 5px;
+            height: 24px;
+            background: #fff;
+            border-radius: 2px;
+        }
+
+        .video-control-button .play-icon-btn {
+            width: 0;
+            height: 0;
+            border-left: 18px solid #fff;
+            border-top: 12px solid transparent;
+            border-bottom: 12px solid transparent;
+            margin-left: 4px;
+        }
+
+        .video-control-button .play-icon-btn.hidden,
+        .video-control-button .pause-icon.hidden {
+            display: none;
+        }
+
+        /* Секция 2 - Видео по центру */
+        .section-2 {
+            min-height: 100vh;
+            background: linear-gradient(0deg, rgba(255, 255, 255, 1) 50%, rgba(229, 235, 231, 1) 95%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 100px 20px;
+        }
+
+        .video-container {
+            position: relative;
+            width: 800px;
+            max-width: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .video-container.hide-controls .center-video-control {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .video-container video {
+            width: 100%;
+            display: block;
+        }
+
+        .center-video-control {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .center-video-control:hover {
+            background: #fff;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .center-video-control .pause-icon,
+        .center-video-control .play-icon-btn {
+            position: relative;
+        }
+
+        .center-video-control .pause-icon {
+            width: 24px;
+            height: 30px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .center-video-control .pause-icon::before,
+        .center-video-control .pause-icon::after {
+            content: '';
+            width: 6px;
+            height: 30px;
+            background: #000;
+            border-radius: 2px;
+        }
+
+        .center-video-control .play-icon-btn {
+            width: 0;
+            height: 0;
+            border-left: 25px solid #000;
+            border-top: 15px solid transparent;
+            border-bottom: 15px solid transparent;
+            margin-left: 5px;
+        }
+
+        .center-video-control .play-icon-btn.hidden,
+        .center-video-control .pause-icon.hidden {
+            display: none;
+        }
+
+        /* Секция 3 - Аккордеон FAQ */
+        .section-3 {
+            min-height: 100vh;
+            background: #e5ebe7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 20px;
+        }
+
+        .faq-container {
+            margin: 0 auto;
+            padding: 4rem;
+            width: 48rem;
+            max-width: 100%;
+        }
+
+        .faq-container h2 {
+            color: #000000;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .accordion {
+            color: #000000;
+        }
+
+        .accordion .accordion-item {
+            border-bottom: 1px solid #e222222;
+        }
+
+        .accordion .accordion-item button[aria-expanded='true'] {
+            border-bottom: 1px solid #0000000;
+        }
+
+        .accordion button {
+            position: relative;
+            display: block;
+            text-align: left;
+            width: 100%;
+            padding: 1em 0;
+            color: #1a1818;
+            font-size: 1.15rem;
+            font-weight: 400;
+            border: none;
+            background: none;
+            outline: none;
+            cursor: pointer;
+            transition: color 200ms ease;
+        }
+
+        .accordion button:hover,
+        .accordion button:focus {
+            color: #000000;
+        }
+
+        .accordion button:hover .icon,
+        .accordion button:focus .icon {
+            border-color: #000000;
+        }
+
+        .accordion .accordion-title {
+            padding: 1em 1.5em 1em 0;
+            display: block;
+        }
+
+        .accordion .icon {
+            display: inline-block;
+            position: absolute;
+            top: 40px;
+            right: 0;
+            width: 22px;
+            height: 22px;
+            border: 1px solid;
+            border-radius: 22px;
+            transition: border-color 200ms ease;
+        }
+
+        .accordion .icon::before {
+            display: block;
+            position: absolute;
+            content: '';
+            top: 9px;
+            left: 5px;
+            width: 10px;
+            height: 2px;
+            background: currentColor;
+        }
+
+        .accordion .icon::after {
+            display: block;
+            position: absolute;
+            content: '';
+            top: 5px;
+            left: 9px;
+            width: 2px;
+            height: 10px;
+            background: currentColor;
+            transition: width 200ms ease;
+        }
+
+        .accordion button[aria-expanded='true'] {
+            color: #000000;
+        }
+
+        .accordion button[aria-expanded='true'] .icon::after {
+            width: 0;
+        }
+
+        .accordion button[aria-expanded='true'] + .accordion-content {
+            opacity: 1;
+            max-height: 10000px; /* умовно велике значення */
+            transition: opacity 200ms linear, max-height 600ms ease;
+        }
+
+        .accordion .accordion-content {
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: opacity 200ms linear, max-height 200ms linear;
+            will-change: opacity, max-height;
+        }
+
+        .accordion .accordion-content p {
+            font-size: 1rem;
+            font-weight: 300;
+            margin: 2em 0;
+            color: #000000;
+        }
+        
+        .secondary-demo-btn {
+  
+        text-decoration: none; 
+}
+
+
+.accordion .accordion-item {
+        border-bottom: 1px solid #000000;
+    }
+
+    .accordion .accordion-item button[aria-expanded='true'] {
+        border-bottom: 1px solid #222222;
+    }
+
+
+@media (max-width: 768px) {
+    .section-1 {
+        height: auto; /* секция подстраивается под высоту видео */
+        min-height: auto;
+        max-height: 90vh;
+    }
+
+    .section-1 video {
+        width: 100%;
+        height: auto; /* сохраняет пропорции */
+        object-fit: contain; /* не обрезает видео */
+        background: #000;
+        display: block;
+    }
+    
+    .h2-TsifrovaDovira {
+        margin-bottom: 0 !important;
+    }
+    
+    .section-2 {
+  padding: 60px 20px;
+    }
+    .faq-container {
+    padding: 0rem;
+}
+
+        
+    </style>
+</head>
+<body>
+    <!-- Стартовая страница -->
+    <div class="start-screen" id="startScreen">
+<img src="dovira-logo.png" alt="Dovira Logo">
+
+        <button class="shiny-cta" id="startButton">
+            <span>Розпочати демонстрацію</span>
+        </button>
+    </div>
+
+    <!-- Интро видео на весь экран -->
+    <div class="intro-video-screen" id="introVideoScreen">
+        <video id="introVideo">
+            <source src="world1.mov" type="video/mp4">
+        </video>
+    </div>
+
+    <!-- Черная вспышка для перехода -->
+    <div class="transition-flash" id="transitionFlash"></div>
+
+    <!-- Основной контент -->
+    <div class="main-content" id="mainContent">
+        <!-- Секция 1: Полноэкранное автовоспроизведение -->
+        <section class="section-1">
+            <video id="fullscreenVideo" playsinline>
+                <source src="volodia.mp4" type="video/mp4">
+            </video>
+            <button class="video-control-button" id="fullscreenControl">
+                <div class="pause-icon"></div>
+                <div class="play-icon-btn hidden"></div>
+            </button>
+        </section>
+
+        <!-- Секция 2: Видео по центру с кнопкой Play -->
+        <section class="section-2">
+            <h2 class="h2-TsifrovaDovira" style="color: #000000; font-size: 2rem; margin-bottom: 2rem;">🌍 Цифрова довіра України</h2>
+            <!-- Інструкція для голосування -->
+    <div style="max-width: 800px; margin: 0 auto 40px auto; font-family: inherit; font-size: 1.1rem; line-height: 1.6; white-space: pre-wrap;">
+Для голосування вам потрібен встановлений криптогаманець MetaMask і Telegram на вашому смартфоні. Дотримуйтесь простих кроків нижче.
+
+<b>1. Завантажте MetaMask на смартфон із App Store або Google Play.</b>
+Відкрийте App Store (для iPhone) або Google Play (для Android), знайдіть додаток MetaMask, натисніть "Завантажити" і встановіть його. Після встановлення створіть новий гаманець, дотримуйтесь інструкцій у додатку та безпечно збережіть seed-фразу (12 слів) у надійному місці. Це ваш ключ до гаманця.
+
+<b>2. Відскануйте QR-код зі смартфона або натисніть «Розпочати голосування» на сайті якщо бажаєте голосувати з компʼютера.</b>
+У Telegram-боті натисніть «Розпочати».
+
+<b>3. Виконайте кроки для голосування:</b>
+- Підключіть криптогаманець у вкладці "Кабінет".
+- Оберіть кандидата і проголосуйте у вкладці "Голосування".
+- Підтвердіть голос через блокчейн у MetaMask.
+- Очікуйте результати; ШІ моніторить аномалії та надасть звіт якщо виявить підозрілу активність.
+- Є можливість задавати запитання щодо кандидатів у вкладці «AI», які вас цікавлять. 
+- Слідкуйте за анонсами у вкладці "Події".
+    </div>
+    
+    <h2 style="color: #000000; font-size: 2rem; margin-bottom: 2rem;">🚀 Демонстрація роботи</h2>
+            <div class="video-container">
+                <video id="centerVideo" playsinline controls>
+                    <source src="demonstration.mp4" type="video/mp4">
+                </video>
+                <button class="center-video-control" id="centerControl">
+                    <div class="pause-icon hidden"></div>
+                    <div class="play-icon-btn"></div>
+                </button>
+            </div>
+            
+            <img src="qr-c.png" alt="QR code" style="max-width: 200px; height: auto; margin-top: 30px; margin-bottom: 30px;">
+
+            <a href="https://t.me/ukraine_bl0ckchain_voting_bot/" 
+   target="_blank" 
+   class="shiny-cta secondary-demo-btn" 
+   id="mainDemoButton">
+   <span>Розпочати голосування</span></a>
+            
+        </section>
+
+        <!-- Секция 3: Аккордеон FAQ -->
+        <section class="section-3">
+            <div class="faq-container">
+                <h2>📊 Описання проєкту</h2>
+                <div class="accordion">
+                    
+                    <div class="accordion-item">
+    <button id="accordion-button-1" aria-expanded="false">
+        <span class="accordion-title"><h3>ПРОБЛЕМА</h3></span>
+        <span class="icon" aria-hidden="true"></span>
+    </button>
+    <div class="accordion-content">
+        <pre style="white-space: pre-wrap; font-family: inherit; font-size: 1rem; line-height: 1.5; margin-top: 1em;">
+Мільйони українців знаходяться за кордоном через війну. Вони втратили можливість голосувати:
+
+ 🚫 Неможливо дістатися до України - військовий стан, небезпека, відсутність коштів
+- 🏛️ Консульства не справляються - черги на тижні, обмежена кількість дільниць (50-100 на всю країну)
+- 💸 Дорого: Поїздка до консульства = 100-300€ (проїзд + день відпустки)
+- ⏱️ Довго: 4-8 годин черги + дорога
+- 🤔 Недовіра: Централізовані системи = можливість маніпуляцій, втрата анонімності
+- 🛡️ Військові на фронті: масово покинути бойові позиції неможливо через ризики послаблення оборони. Виїзні дільниці рідкісні, а традиційне голосування вимагає фізичної присутності, що загрожує безпеці та бойовим операціям.
+- ♿ Люди з обмеженнями по здоров'ю: Фізичні бар'єри (відсутність ramps, транспорту, спеціального обладнання на дільницях) роблять процес недоступним. Голосування вдома можливе, але бюрократичне та не завжди організоване, що призводить до виключення з демократичного процесу.
+
+<b>Чому це критично?</b>
+
+Під час виборів голоси мільйонів українців за кордоном, а також військових, які захищають країну на фронті, та людей з інвалідністю, які часто є найбільш вразливими, можуть залишитися непочутими. Діаспора, яка вимушено покинула Україну, не має можливості впливати на майбутнє своєї країни, хоча продовжує її підтримувати фінансово та захищати її інтереси по всьому світу. 
+Аналогічно, військові на бойових позиціях ризикують життям за демократію, але самі позбавлені права голосу через логістичні бар'єри, а люди з обмеженнями по здоров'ю стикаються з дискримінацією в доступі. 
+Мій сервіс, заснований на блокчейн-голосуванні з інтеграцією AI, може радикально спростити це, роблячи процес безпечним, дистанційним і доступним з будь-якого місця - від окопу до лікарняного ліжка чи закордонної квартири, - без потреби в фізичній присутності чи складній бюрократії. 
+Це не просто незручність, а системна несправедливість, яка послаблює легітимність виборів і демотивує суспільство.
+        </pre>
+    </div>
+</div>
+
+<div class="accordion-item">
+    <button id="accordion-button-1" aria-expanded="false">
+        <span class="accordion-title"><h3>ОЧЕВИДНЕ РІШЕННЯ</h3></span>
+        <span class="icon" aria-hidden="true"></span>
+    </button>
+    <div class="accordion-content">
+        <pre style="white-space: pre-wrap; font-family: inherit; font-size: 1rem; line-height: 1.5; margin-top: 1em;">
+ Як вирішують зараз?
+
+<b>1. Традиційне голосування на дільницях:</b>
+- ❌ Потрібна фізична присутність
+- ❌ Обмежена кількість дільниць за кордоном
+- ❌ Вартість організації: $500-1000 на дільницю
+
+<b>2. Централізовані електронні системи:</b>
+- ❌ Централізовані сервери = вразливість до хакерських атак
+- ❌ Відсутність прозорості підрахунку
+- ❌ Можливість втручання та маніпуляцій
+- ❌ Не гарантують анонімність
+- ❌ Вартість розробки: $200,000-500,000
+- ❌ Підтримка серверів: $5,000-10,000/місяць
+
+<b>3. Поштове голосування:</b>
+- ❌ 2-4 тижні на доставку
+- ❌ Можливість втрати бюлетенів
+- ❌ Відсутність прозорості
+
+</pre>
+
+    </div>
+</div>
+
+
+<div class="accordion-item">
+    <button id="accordion-button-1" aria-expanded="false">
+        <span class="accordion-title"><h3>НАШЕ РІШЕННЯ: Blockchain + AI</h3></span>
+        <span class="icon" aria-hidden="true"></span>
+    </button>
+    <div class="accordion-content">
+        <pre style="white-space: pre-wrap; font-family: inherit; font-size: 1rem; line-height: 1.5; margin-top: 1em;">
+🎯 Концепція
+
+Повністю безкоштовне для виборців, анонімне та прозоре голосування через Telegram Mini App (в майбутньому планується інтеграція з Дія) на blockchain Polygon.
+
+🛠️ Технічна архітектура
+
+<b>1. Blockchain (на даному єтапі Polygon Amoy)</b>
+- ✅ 100% безкоштовно для користувачів - relay server платить gas fees ($0.001/голос)
+- ✅ Повна прозорість - кожен може перевірити результати на explorer
+- ✅ Незмінність - неможливо змінити або видалити голоси
+- ✅ Швидкість - транзакції за 15 секунд
+
+<b>2. Анонімність (Two-Layer Architecture)</b>
+Унікальна особливість:
+- 🔒 База даних: Зберігає ТІЛЬКИ факт голосування (hasVoted), БЕЗ інформації за кого
+- 🔍 Blockchain: Зберігає результати публічно та прозоро
+- ⏱️ Random delay 8-12 сек - унеможливлює зв'язок часу підпису з часом транзакції
+
+Результат: Система знає ЩО ви проголосували, але НЕ ЗНАЄ ЗА КОГО.
+
+<b>3. AI Integration (на данному єтапі використовується xAI Grok-2)</b>
+Автоматизовані сервіси:
+
+<b>A. Fact-Checking Bot 📊</b>
+- Аналізує заяви кандидатів в реальному часі 
+- Перевіряє факти через інтернет
+- Генерує нейтральні звіти без упередженості
+- Економія: Замінює команду з 3-5 fact-checkers ($15,000/місяць → $50/місяць AI API)
+
+<b>B. Anomaly Detection 🔍</b>
+- Моніторинг підозрілої активності 
+- Виявлення ботів та автоматизації
+- Аналіз патернів голосування
+- Економія: Замінює security команду ($20,000/місяць → $100/місяць AI)
+
+<b>C. Telegram Bot Notifications 🔔(post-MVP)</b>
+- Автоматичні нагадування про дедлайни
+- Відповіді на FAQ 24/7
+- Підтримка користувачів
+- Економія: Замінює 2-3 операторів підтримки ($6,000/місяць → $0)
+
+<h3>💰 ЕКОНОМІЯ: Конкретні цифри</h3>
+<b>Для держави:</b>
+</pre>
+
+<table style="width: 100%; border-collapse: collapse; background: #2a2a2a; color: #fff; margin-bottom: 1.5rem; border-radius: 8px; overflow: hidden;">
+    <thead>
+        <tr>
+            <th style="background: #1a1a1a; padding: 1rem; text-align: left; font-size: 1.1rem; font-weight: 600; border-bottom: 2px solid #444;">Традиційна система</th>
+            <th style="background: #1a1a1a; padding: 1rem; text-align: left; font-size: 1.1rem; font-weight: 600; border-bottom: 2px solid #444;">Цифрова довіра</th>
+            <th style="background: #1a1a1a; padding: 1rem; text-align: left; font-size: 1.1rem; font-weight: 600; border-bottom: 2px solid #444;">Економія</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td style="padding: 1rem; border-bottom: 1px solid #444; vertical-align: top;">Дільниці за кордоном: 50 × $1,000 = $50,000</td>
+            <td style="padding: 1rem; border-bottom: 1px solid #444; vertical-align: top;">Relay server: $0.001 × 100,000 голосів = $100</td>
+            <td style="padding: 1rem; border-bottom: 1px solid #444; vertical-align: top; color: #4ade80; font-weight: 600;">-99.8%</td>
+        </tr>
+        <tr>
+            <td style="padding: 1rem; border-bottom: 1px solid #444; vertical-align: top;">Fact-checking: 5 людей × $3,000 = $15,000/міс</td>
+            <td style="padding: 1rem; border-bottom: 1px solid #444; vertical-align: top;">xAI API: $50/міс</td>
+            <td style="padding: 1rem; border-bottom: 1px solid #444; vertical-align: top; color: #4ade80; font-weight: 600;">-99.7%</td>
+        </tr>
+        <tr>
+            <td style="padding: 1rem; border-bottom: 1px solid #444; vertical-align: top;">Security моніторинг: 3 людини × $4,000 = $12,000/міс</td>
+            <td style="padding: 1rem; border-bottom: 1px solid #444; vertical-align: top;">AI anomaly detection: $100/міс</td>
+            <td style="padding: 1rem; border-bottom: 1px solid #444; vertical-align: top; color: #4ade80; font-weight: 600;">-99.2%</td>
+        </tr>
+        <tr>
+            <td style="padding: 1rem; border-bottom: none; vertical-align: top;">Підтримка: 3 оператори × $2,000 = $6,000/міс</td>
+            <td style="padding: 1rem; border-bottom: none; vertical-align: top;">Telegram Bot: $0</td>
+            <td style="padding: 1rem; border-bottom: none; vertical-align: top; color: #ef4444; font-weight: 600;">-100%</td>
+        </tr>
+    </tbody>
+</table>
+
+<div style="background: #2a2a2a; color: #fff; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+    <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.2rem;">ЗАГАЛЬНА ЕКОНОМІЯ на 1 місяць виборів:</h3>
+    <ul style="list-style: none; padding: 0; margin: 0;">
+        <li style="padding: 0.5rem 0; font-size: 1rem;">Традиційна система: $93,000</li>
+        <li style="padding: 0.5rem 0; font-size: 1rem;">Цифрова довіра: $250</li>
+        <li style="padding: 0.5rem 0; font-size: 1rem;"><span style="color: #4ade80; font-weight: 600;">Економія: $92,750 (99.7%!)</span></li>
+    </ul>
+</div>
+       
+      <b>Для виборців:</b>
+      
+     
+
+<table style="width: 100%; border-collapse: collapse; background: #2a2a2a; color: #fff; border-radius: 8px; overflow: hidden;">
+    <thead>
+        <tr>
+            <th style="background: #1a1a1a; padding: 1rem; text-align: left; font-size: 1rem; font-weight: 600; border-bottom: 2px solid #444;">Показник</th>
+            <th style="background: #1a1a1a; padding: 1rem; text-align: left; font-size: 1rem; font-weight: 600; border-bottom: 2px solid #444;">Традиційне</th>
+            <th style="background: #1a1a1a; padding: 1rem; text-align: left; font-size: 1rem; font-weight: 600; border-bottom: 2px solid #444;">Наше рішення</th>
+            <th style="background: #1a1a1a; padding: 1rem; text-align: left; font-size: 1rem; font-weight: 600; border-bottom: 2px solid #444;">Економія</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td style="padding: 1rem; border-bottom: 1px solid #444;">Час на голосування</td>
+            <td style="padding: 1rem; border-bottom: 1px solid #444;">8 годин (дорога + черга)</td>
+            <td style="padding: 1rem; border-bottom: 1px solid #444;">3 <span style="text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px;">хвилини</span></td>
+            <td style="padding: 1rem; border-bottom: 1px solid #444; color: #4ade80; font-weight: 600;">-97.5%</td>
+        </tr>
+        <tr>
+            <td style="padding: 1rem; border-bottom: 1px solid #444;">Вартість</td>
+            <td style="padding: 1rem; border-bottom: 1px solid #444;">€200 (проїзд + день відпустки)</td>
+            <td style="padding: 1rem; border-bottom: 1px solid #444;">€0</td>
+            <td style="padding: 1rem; border-bottom: 1px solid #444; color: #ef4444; font-weight: 600;">-100%</td>
+        </tr>
+        <tr>
+            <td style="padding: 1rem; border-bottom: none;">Доступність</td>
+            <td style="padding: 1rem; border-bottom: none;">50 дільниць на світ</td>
+            <td style="padding: 1rem; border-bottom: none;">Будь-де з інтернетом</td>
+            <td style="padding: 1rem; border-bottom: none; font-size: 1.5rem;">∞</td>
+        </tr>
+    </tbody>
+</table>
+   <pre style="white-space: pre-wrap; font-family: inherit; font-size: 1rem; line-height: 1.5; margin-top: 1em;">     
+<b>Для 100,000 виборців:</b>
+- Традиційно: 800,000 годин + €20,000,000
+- З додатком: 5,000 годин + €0
+- Економія: 795,000 годин життя + €20 млн
+
+</pre>
+        
+    </div>
+</div>
+
+         
+         
+         <div class="accordion-item">
+    <button id="accordion-button-1" aria-expanded="false">
+        <span class="accordion-title"><h3>ПРОДУКТОВІ ТА ТЕХНІЧНІ МЕТРИКИ</h3></span>
+        <span class="icon" aria-hidden="true"></span>
+    </button>
+    <div class="accordion-content">
+        <pre style="white-space: pre-wrap; font-family: inherit; font-size: 1rem; line-height: 1.5; margin-top: 1em;">
+
+Ключові показники:
+
+<b>1. Охоплення</b>
+    - Потенційна аудиторія: 7+ млн українців за кордоном
+    - Target: 100,000 користувачів у перші вибори (1.4%)
+    
+<b>2. Cost per Vote</b>
+    - Традиційна система: $930/голос
+    - Наша система: $0.0025/голос (тільки gas fees)
+    - ROI: 372,000%
+    
+<b>3. User Experience</b>
+    - Час голосування: 3 хвилини
+    - Кроків: 4 (підключити Telegram (в майбутньому Дія) → гаманець → обрати → підписати)
+    - Success rate: 95%+ (без черг, без збоїв серверів)
+    
+<b>4. Transparency Score</b>
+    - Можливість перевірки: 100% (кожен голос на blockchain explorer)
+    - Централізовані системи: 0% (треба вірити на слово)
+    
+<b>5. Security</b>
+    - AI моніторинг: 24/7
+    - Виявлення аномалій: реальний час
+    - Можливість атаки: мінімальна (потрібно 51% blockchain)
+
+
+</pre>
+
+    </div>
+</div>
+
+       <div class="accordion-item">
+    <button id="accordion-button-1" aria-expanded="false">
+        <span class="accordion-title"><h3>ПРАКТИЧНІСТЬ</h3></span>
+        <span class="icon" aria-hidden="true"></span>
+    </button>
+    <div class="accordion-content">
+        <pre style="white-space: pre-wrap; font-family: inherit; font-size: 1rem; line-height: 1.5; margin-top: 1em;">
+
+Чому це краще?
+
+<b>Технічні переваги:</b>
+- ✅ EIP-712 підписання = wallet без MATIC (повністю порожній)
+- ✅ Relay server = користувач НІЧОГО не платить
+- ✅ PostgreSQL = дані зберігаються навіки
+- ✅ Telegram Mini App = не потрібно встановлювати окремий додаток
+
+<b>Юридичні переваги:</b>
+- ✅ Blockchain = юридично валідні докази
+- ✅ Криптографічні підписи = неможливо підробити
+- ✅ Timestamping = точний час кожного голосу
+
+<b>Соціальні переваги:</b>
+- ✅ Інклюзивність = голосують ВСІ, незалежно від локації
+- ✅ Доступність = тільки смартфон + інтернет
+- ✅ Довіра = прозорість збільшує участь
+
+
+</pre>
+
+    </div>
+</div>
+
+
+      <div class="accordion-item">
+    <button id="accordion-button-1" aria-expanded="false">
+        <span class="accordion-title"><h3>УНІКАЛЬНІСТЬ</h3></span>
+        <span class="icon" aria-hidden="true"></span>
+    </button>
+    <div class="accordion-content">
+        <pre style="white-space: pre-wrap; font-family: inherit; font-size: 1rem; line-height: 1.5; margin-top: 1em;">
+
+Унікальні фічі:
+
+<b>1. Two-Layer Anonymity 🔐</b>
+    - База даних НЕ знає за кого голосували
+    - Blockchain НЕ знає хто саме голосував
+    - Разом = повна анонімність + прозорість
+    
+<b>2. Gasless Voting 💸</b>
+    - Користувач підписує, сервер платить
+    - Wallet може бути порожній
+    - Вартість для оператора: $0.001/голос
+    
+<b>3. AI-Powered Trust 🤖</b>
+    - Fact-checking заяв кандидатів
+    - Виявлення аномальної поведінки
+    - Автоматична підтримка 24/7
+
+</pre>
+
+    </div>
+</div>
+           
+                    
+                    
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const startScreen = document.getElementById('startScreen');
+        const startButton = document.getElementById('startButton');
+        const introVideoScreen = document.getElementById('introVideoScreen');
+        const introVideo = document.getElementById('introVideo');
+        const transitionFlash = document.getElementById('transitionFlash');
+        const mainContent = document.getElementById('mainContent');
+        const fullscreenVideo = document.getElementById('fullscreenVideo');
+        const fullscreenControl = document.getElementById('fullscreenControl');
+        const centerVideo = document.getElementById('centerVideo');
+        const centerControl = document.getElementById('centerControl');
+
+        let fullscreenInactivityTimer;
+        let centerInactivityTimer;
+
+        // Функция для скрытия кнопки управления полноэкранного видео
+        function hideFullscreenControl() {
+            if (!fullscreenVideo.paused) {
+                fullscreenControl.classList.add('hide');
+            }
+        }
+
+        // Функция для показа кнопки управления полноэкранного видео
+        function showFullscreenControl() {
+            fullscreenControl.classList.remove('hide');
+            clearTimeout(fullscreenInactivityTimer);
+            if (!fullscreenVideo.paused) {
+                fullscreenInactivityTimer = setTimeout(hideFullscreenControl, 3000);
+            }
+        }
+
+        // Функция для скрытия кнопки управления центрального видео
+        function hideCenterControl() {
+            if (!centerVideo.paused) {
+                document.querySelector('.video-container').classList.add('hide-controls');
+            }
+        }
+
+        // Функция для показа кнопки управления центрального видео
+        function showCenterControl() {
+            document.querySelector('.video-container').classList.remove('hide-controls');
+            clearTimeout(centerInactivityTimer);
+            if (!centerVideo.paused) {
+                centerInactivityTimer = setTimeout(hideCenterControl, 3000);
+            }
+        }
+
+        // Отслеживание движения мыши для секции 1
+        document.querySelector('.section-1').addEventListener('mousemove', showFullscreenControl);
+        document.querySelector('.section-1').addEventListener('mouseleave', hideFullscreenControl);
+
+        // Отслеживание движения мыши для секции 2
+        document.querySelector('.video-container').addEventListener('mousemove', showCenterControl);
+        document.querySelector('.video-container').addEventListener('mouseleave', hideCenterControl);
+
+       
+       // Запуск демонстрации (без интро-видео)
+startButton.addEventListener('click', () => {
+    startButton.classList.add('fade-out');
+    
+    // Запускаем чёрную вспышку
+    setTimeout(() => {
+        transitionFlash.classList.add('active');
+    }, 300);
+
+    // Убираем стартовый экран
+    setTimeout(() => {
+        startScreen.classList.add('hidden');
+    }, 800);
+
+    // После вспышки показываем основной контент и включаем видео
+    setTimeout(() => {
+        transitionFlash.classList.remove('active');
+        mainContent.classList.add('visible');
+        fullscreenVideo.play();
+    }, 1500); // можно отрегулировать время появления
+});
+
+       
+        // Управление полноэкранным видео
+        fullscreenControl.addEventListener('click', () => {
+            const pauseIcon = fullscreenControl.querySelector('.pause-icon');
+            const playIcon = fullscreenControl.querySelector('.play-icon-btn');
+            
+            if (fullscreenVideo.paused) {
+                fullscreenVideo.play();
+                pauseIcon.classList.remove('hidden');
+                playIcon.classList.add('hidden');
+                fullscreenInactivityTimer = setTimeout(hideFullscreenControl, 3000);
+            } else {
+                fullscreenVideo.pause();
+                pauseIcon.classList.add('hidden');
+                playIcon.classList.remove('hidden');
+                fullscreenControl.classList.remove('hide');
+                clearTimeout(fullscreenInactivityTimer);
+            }
+        });
+
+        // Управление центральным видео
+        centerControl.addEventListener('click', () => {
+            const pauseIcon = centerControl.querySelector('.pause-icon');
+            const playIcon = centerControl.querySelector('.play-icon-btn');
+            
+            if (centerVideo.paused) {
+                centerVideo.play();
+                pauseIcon.classList.remove('hidden');
+                playIcon.classList.add('hidden');
+                centerInactivityTimer = setTimeout(hideCenterControl, 3000);
+            } else {
+                centerVideo.pause();
+                pauseIcon.classList.add('hidden');
+                playIcon.classList.remove('hidden');
+                document.querySelector('.video-container').classList.remove('hide-controls');
+                clearTimeout(centerInactivityTimer);
+            }
+        });
+
+        // Синхронизация иконок с состоянием видео
+        fullscreenVideo.addEventListener('play', () => {
+            const pauseIcon = fullscreenControl.querySelector('.pause-icon');
+            const playIcon = fullscreenControl.querySelector('.play-icon-btn');
+            pauseIcon.classList.remove('hidden');
+            playIcon.classList.add('hidden');
+            fullscreenInactivityTimer = setTimeout(hideFullscreenControl, 3000);
+        });
+
+        fullscreenVideo.addEventListener('pause', () => {
+            const pauseIcon = fullscreenControl.querySelector('.pause-icon');
+            const playIcon = fullscreenControl.querySelector('.play-icon-btn');
+            pauseIcon.classList.add('hidden');
+            playIcon.classList.remove('hidden');
+            fullscreenControl.classList.remove('hide');
+            clearTimeout(fullscreenInactivityTimer);
+        });
+
+        centerVideo.addEventListener('play', () => {
+            const pauseIcon = centerControl.querySelector('.pause-icon');
+            const playIcon = centerControl.querySelector('.play-icon-btn');
+            pauseIcon.classList.remove('hidden');
+            playIcon.classList.add('hidden');
+            centerInactivityTimer = setTimeout(hideCenterControl, 3000);
+        });
+
+        centerVideo.addEventListener('pause', () => {
+            const pauseIcon = centerControl.querySelector('.pause-icon');
+            const playIcon = centerControl.querySelector('.play-icon-btn');
+            pauseIcon.classList.add('hidden');
+            playIcon.classList.remove('hidden');
+            document.querySelector('.video-container').classList.remove('hide-controls');
+            clearTimeout(centerInactivityTimer);
+        });
+        
+        // Автоматическая прокрутка ко второй секции после окончания первого видео
+fullscreenVideo.addEventListener('ended', () => {
+    // Плавная прокрутка ко второй секции
+    document.querySelector('.section-2').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+    });
+});
+
+        // Аккордеон FAQ - открытие/закрытие без закрытия других вкладок
+        const accordionButtons = document.querySelectorAll(".accordion button");
+        
+        function toggleAccordion() {
+            const itemToggle = this.getAttribute('aria-expanded');
+            
+            // Переключаем только текущий элемент
+            if (itemToggle == 'false') {
+                this.setAttribute('aria-expanded', 'true');
+            } else {
+                this.setAttribute('aria-expanded', 'false');
+            }
+        }
+        
+        accordionButtons.forEach(button => button.addEventListener('click', toggleAccordion));
+    </script>
+</body>
+</html>
